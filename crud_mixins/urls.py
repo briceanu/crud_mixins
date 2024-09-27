@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from crud.views import BookView,BookViewUpdate,BookViewMixin, RemoveBook, RemoveBookWithQueryParams
-from crud.views import BookDelete,BookViewList
+from crud.views import BookDelete,BookViewList,SignUp,SignIn
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('book',BookView.as_view(),name='book'),
@@ -30,7 +30,9 @@ urlpatterns = [
     path('removebook',RemoveBookWithQueryParams.as_view(),name='remove-book'),
     # path('deletebook/<uuid:book_id>',BookDelete.as_view(),name='delelte-book'),
     path('deletebook',BookDelete.as_view(),name='delelte-book'),
-    path('listbooks',BookViewList.as_view(),name='list-books')
+    path('listbooks',BookViewList.as_view(),name='list-books'),
+    path('signup',SignUp.as_view(),name='signup'),
+    path('signin',SignIn.as_view(),name='sigin')
 
 
 

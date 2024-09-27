@@ -1,11 +1,16 @@
 from .models import Book
 from .bookserializer import BookSerializer
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView ,ListCreateAPIView, CreateAPIView
 from rest_framework.mixins import CreateModelMixin,ListModelMixin,DestroyModelMixin,UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound ,AuthenticationFailed
 from rest_framework import serializers
+from rest_framework.permissions import IsAuthenticated
+from .user_serializer import UserSerializer
+from django.contrib.auth.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.authentication import authenticate
 
 
 
@@ -151,6 +156,7 @@ class RemoveBookWithQueryParams(DestroyModelMixin,GenericAPIView):
 class BookDelete(GenericAPIView,DestroyModelMixin):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    permission_classes = [IsAuthenticated]
     # lookup_field = 'book_id'
     def get_object(self):
         book_id = self.request.query_params.get('book_id')
@@ -168,6 +174,7 @@ class BookDelete(GenericAPIView,DestroyModelMixin):
 class BookViewList(GenericAPIView,ListModelMixin):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    # permission_classes= [IsAuthenticated]
 
 
     # using the  get_object function to get the book
@@ -193,3 +200,32 @@ class BookViewList(GenericAPIView,ListModelMixin):
 
     def get(self,request,*args,**kwargs):
         return self.list(request,*args,**kwargs)
+    
+
+
+
+class SignUp(ListCreateAPIView):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+
+class SignIn(GenericAPIView,CreateModelMixin):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+    def post(self,request,*args,**kwargs):
+        username = self.request.data.get('username')
+        password = self.request.data.get('password')
+        if not username or not password:
+            raise NotFound(detail='username or password not provided')
+
+        authenticate_user = authenticate(username=username,password=password)
+        if not authenticate_user:
+            raise AuthenticationFailed(detail='Incorrect authentication credentials.')
+
+        refresh_token = RefreshToken.for_user(authenticate_user)
+        access_token = refresh_token.access_token
+
+        return Response({
+                "access":str(access_token),
+                "refresh":str(refresh_token)},status=status.HTTP_200_OK)
+    
+         
